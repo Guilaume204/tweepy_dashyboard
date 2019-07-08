@@ -2,6 +2,7 @@ import pandas as pd
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
 from dash.dependencies import Input, Output, State
 import tweepy
 
@@ -10,10 +11,6 @@ import json
 with open('api_keys.json') as json_file:
     data = json.load(json_file)
 print(data)
-
-
-from plotly.offline import iplot, init_notebook_mode
-init_notebook_mode(connected=True)
 
 # Consumer keys and access tokens, used for OAuth
 consumer_key = data["API key"]
@@ -43,6 +40,7 @@ app.layout = html.Div(children=[
         value=''),
 
     html.Button('Submit', id='btnSubmit_1', className='btn btn-success'),
+    html.Div(id='table'),
     html.H2(children="User's latest tweets"),
 
     html.Div(children='', id='discription_2'),
@@ -57,39 +55,45 @@ app.layout = html.Div(children=[
 
 
 @app.callback(
-    Output('discription_1', 'children'),
+    Output('table', 'children'),
     [Input('btnSubmit_1', 'n_clicks')],
     [State('textbox_1', 'value')])
 def update_output_1(n_clicks, value):
     if n_clicks != None:
         # Sample method, used to update a status
         search_results = api.search(value)
-        print(type(search_results))
-        print(dir(search_results))
-        for i in range(search_results.count):
-            print(search_results.pop())
-            print('=' * 50)
+        tweets = []
+        for i in range(search_results.count-1):
+            tweet = search_results.pop()
+            tweets.append(tweet.author.name+'@'+str(tweet.created_at)+': '+tweet.text)
+
+        return '\n\n'.join(tweets)
         # return('Search returned '+str(search_results))
     else:
-        return('Dash: A web application framework for Python.')
+        return 'started'
 
-
-@app.callback(
-    Output('discription_2', 'children'),
-    [Input('btnSubmit_2', 'n_clicks')],
-    [State('textbox_2', 'value')])
-def update_output_2(n_clicks, value):
-    if n_clicks != None:
-        # Sample method, used to update a status
-        search_results = self.client.user_timeline(id=value, count=1)[0]
-        print(type(search_results))
-        print(dir(search_results))
-        for i in range(search_results.count):
-            print(search_results.pop())
-            print('=' * 5)
-        # return('Search returned '+str(search_results))
-    else:
-        return('Dash: A web application framework for Python.')
+#
+# @app.callback(
+#     Output('discription_2', 'children'),
+#     [Input('btnSubmit_2', 'n_clicks')],
+#     [State('textbox_2', 'value')])
+# def update_output_2(n_clicks, value):
+#     if n_clicks != None:
+#         # Sample method, used to update a status
+#         search_results = client.user_timeline(id=value, count=1)[0]
+#         tweets = []
+#         authors = []
+#         times = []
+#         for i in range(search_results.count-1):
+#             tweet = search_results.pop()
+#             tweets.append(tweet.text)
+#             authors.append(tweet.author.name)
+#             times.append(tweet.created_on)
+#         print(tweets[0:2])
+#
+#         # return('Search returned '+str(search_results))
+#     else:
+#         return('Dash: A web application framework for Python.')
 
 
 if __name__ == '__main__':
